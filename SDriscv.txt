@@ -110,7 +110,7 @@ la a1, arrayQ
 lw a2, length
 jal ra, copia_par_array
 
-li a7, 4 #printea
+li a7ddi sp, sp, -12, 4 #printea
 ecall
 
 li a7, 93 #stopea
@@ -229,54 +229,138 @@ def fibonacci(n):
     if n == 0:
         return 0
     else:
-        return fibonacci(n-1) + fibonacci(n-2)
+        a = n-1
+        b = n-2
+        return fibonacci(a) + fibonacci(b)
 
 assembler:
 .text:
 lw a0, numero
 jal ra, fibonacci
 
-li a7, 4 #printea
+li a7, 1 #printea
 ecall
 
 li a7, 93 #stopea
 ecall
 
 fibonacci:
-addi sp, sp, -12
-
-sw 
+addi sp, sp, -12 #hago 3 espacios en el stack, empieza desde arriba por eso resto
 sw ra , 0(sp)
+sw a0,  4(sp)
 
 addi t0 , zero , 1
 beq t0, a0, then1
 beq x0, a0, then2
 #else
 addi a0, a0, -1
-sw ra, 4(sp)
-jal fibonacci
-addi a0, a0, -1
-jal fibonacci
+jal ra, fibonacci
+sw a0, 8(sp) #guardo el resultado de fibonacci(n-1)
 
 
-jr ra
+lw a0, 4(sp) #restauro a0 = n
+addi a0, a0, -2
+jal ra, fibonacci
+sw a0, 4(sp) #guardo el resultado de fibonacci(n-2) 
+
+lw t1, 4(sp) 
+lw t2, 8(sp)
+lw ra, 0(sp)
+add t1, t1, t2
+
+
+add a0 , t1 , x0
+
+return:
+addi sp , sp , 12
+ret
 
 
 then1:
-jr ra
+    lw ra, 0(sp)
+addi sp , sp , 12
+ret
     
 then2:
-jr ra
-
-return:
-    mv a0, t2 
-    ret
+    lw ra, 0(sp)
+addi sp , sp , 12
+ret
 
 .data: 
 numero: .word 5
 
+ejercicio 6:
+a-
+def mul(n, m)
+    i = 0
+    total = 0
+    while(i!=n)
+        total += n
+        i += 1
+    return total
+
+b- 
+def factorial(n)
+    if(n == 0)
+        return 1
+    else
+        return mul(n, facttorial(n-1))
+    
 
 
+risc v cheatshit
+
+.text:
+lw a0, numero
+jal ra, factorial
+
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+mul:
+li t0, -1
+li t3, 0 #acumulador
+j whileW
+
+whileW:
+addi t0, t0, 1
+add a1, a1, a0
+
+bne t0, a2, whileW
+
+ret
+
+factorial:
+addi sp, sp, -8
+li t1, 1
+sw ra, 0(sp)
+sw a0, 4(sp)
+
+bgt a0, t1, while
+
+addi a0, a0, 1
+ret
+
+
+while:
+addi a0, a0, -1
+jal ra, factorial
+mv t2, a0
+lw ra, 0(sp) #quiero el ra anterior no el del factorial
+lw a0, 4(sp) 
+addi sp, sp, 8
+
+jal ra, mul
+
+ret
+
+
+    
+.data
+numero: .word 5
 
 
 
