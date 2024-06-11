@@ -12,8 +12,6 @@ def max_array(array, length)
     return max
 
 assembler: 
-por que es necesario el mv??
-
 .text:
 la a0, array
 lw a1, length
@@ -24,7 +22,6 @@ ecall
 
 li a7, 93 #stopea
 ecall
-
 
 max_array:
     li t0, 0 #iterador de ciclo
@@ -306,10 +303,6 @@ def factorial(n)
     else
         return mul(n, facttorial(n-1))
     
-
-
-risc v cheatshit
-
 .text:
 lw a0, numero
 jal ra, factorial
@@ -321,16 +314,17 @@ li a7, 93 #stopea
 ecall
 
 mul:
-li t0, -1
+li t0, 0
 li t3, 0 #acumulador
 j whileW
 
 whileW:
-addi t0, t0, 1
-add a1, a1, a0
+addi t0, t0, 1 #t0 += 1
+add t3, t3, a0  
 
-bne t0, a2, whileW
+blt t0, t2, whileW #si t0 != t2 -> whileW 
 
+mv a0, t3
 ret
 
 factorial:
@@ -339,9 +333,9 @@ li t1, 1
 sw ra, 0(sp)
 sw a0, 4(sp)
 
-bgt a0, t1, while
+bgt a0, t1, while # a0 > t1 -> while
 
-addi a0, a0, 1
+#addi a0, a0, 1
 ret
 
 
@@ -349,18 +343,58 @@ while:
 addi a0, a0, -1
 jal ra, factorial
 mv t2, a0
-lw ra, 0(sp) #quiero el ra anterior no el del factorial
+lw t4, 0(sp) #quiero el ra anterior no el del factorial
 lw a0, 4(sp) 
 addi sp, sp, 8
 
-jal ra, mul
+jal ra, mul #multiplico a0 = t2 * a0
+mv ra, t4
+jr ra
 
+.data
+numero: .word 7
+
+c) el problema es que para
+
+
+ejercicio 7:
+.text:
+lw a0, numero
+jal ra, sum
+
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+
+sum:
+addi sp, sp, -8
+sw ra, 0(sp)
+sw a0, 4(sp)
+
+bgt a0, x0, while # a0 > t1 -> while
+
+#addi a0, a0, 1
 ret
 
 
-    
-.data
-numero: .word 5
+while:
+addi a0, a0, -1
+jal ra, sum
+mv t2, a0
+lw t4, 0(sp) #quiero el ra anterior no el del factorial
+lw a0, 4(sp) 
+addi sp, sp, 8
 
+add a0, a0, t2
+mv ra, t4
+jr ra
+
+.data
+numero: .word 10
+
+ejercicio
 
 
