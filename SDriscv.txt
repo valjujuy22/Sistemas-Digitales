@@ -395,6 +395,129 @@ jr ra
 .data
 numero: .word 10
 
-ejercicio
+Parcial:
+Ejercicio 1
+
+.text:
+lw a0, numero
+jal ra, impares?
+
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+impares?:
+#creo 4 argumentos, y les asigno a cada uno un byte de la palabra
+#a cada uno dependiendo de su lugar lo muevo a la derecha de modo
+#que quede al principio
+#luego a cada uno le hago and con 1, y hago beq a cada uno
+#si son iguales a 1 voy a un target que le añade 1 a a0
+
+lw a1, mascara1
+lw a2, mascara2
+lw a3, mascara3
+lw a4, mascara4
+
+and t0, a0, a1
+and t1, a0, a2
+and t2, a0, a3
+and t3, a0, a4
+
+srli t3, t3, 24
+srli t2, t2, 16
+srli t1, t1, 8
+
+andi t0, t0, 1
+andi t1, t1, 1
+andi t2, t2, 1
+andi t3, t3, 1
+
+li t4, 1
+li a0, 0
+
+ifs:
+ 
+beq t0, t4, sumo1
+beq t1, t4, sumo2
+beq t2, t4, sumo3
+beq t3, t4, sumo4
+
+ret
+
+sumo1:
+addi a0, a0, 1
+li t0, 0
+j ifs
+
+sumo2:
+addi a0, a0, 1
+li t1, 0
+j ifs
+
+sumo3:
+addi a0, a0, 1
+li t2, 0
+j ifs
+
+sumo4:
+addi a0, a0, 1
+li t3, 0
+j ifs
+    
+.data
+numero: .byte 0x37 0x05 0x01 0x02
+mascara1: .byte 0xff 0x00 0x00 0x00
+mascara2: .byte 0x00 0xff 0x00 0x00
+mascara3: .byte 0x00 0x00 0xff 0x00
+mascara4: .byte 0x00 0x00 0x00 0xff 
+
+
+ejercicio 3:
+.text:
+la a0, mediciones
+lw a1, largo
+jal ra, DispMedicion
+
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+DispMedicion:
+li t0, 0 #iterador
+li s0, 0x0f00 #valor para comparar
+li t2, 0 #contador
+li t3, 0x0000ffff
+
+while:
+lh t1, 0(a0) #indexo y guardo en t1
+
+and t1, t1, t3
+
+beq t0, a1, return #iterador == largo -> return
+blt s0, t1, sumo
+
+addi t0, t0, 1
+addi a0, a0, 2
+j while
+
+sumo:
+addi t0, t0, 1
+addi t2, t2, 1
+addi a0, a0, 2
+j while
+
+return:
+mv a0, t2
+ret
+    
+.data
+mediciones: .half 0x1100 0x00F0 0x0200 0x0010 0x1100
+largo: .byte 5
+
+
 
 
