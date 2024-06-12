@@ -12,38 +12,43 @@ def max_array(array, length)
     return max
 
 assembler: 
-.text:
-la a0, array
-lw a1, length
-jal ra, max_array
+.data
+array: .word 3 1 4 1 5 9 2 11
+length: .word 8
+
+.text
+la a0, array #a0 tiene la direccion en memoria de donde empieza el arreglo
+lw a1, length #a1 = length
+jal ra, maximo #salto a maximo y guardo el pc en ra
 
 li a7, 4 #printea
 ecall
-
 li a7, 93 #stopea
 ecall
 
-max_array:
-    li t0, 0 #iterador de ciclo
-    lw t1, 0(a0) #maximo
-    
+maximo:
+li t0, 0 # iterador
+lw t1, 0(a0) #maximo es igual al primer elem del array
+#no hace falta escribir un jump por que el pc va directo a while luego de maximo
+
 while:
-    bge t0, a1, return
-    lw t2, 0(a0)
-    bge t2, t1, max
-    addi a0, a0, 4
-    addi t0, t0, 1
-    j while
-        
-max: 
-    lw t1, 0(a0)
-    addi a0, a0, 4
-    addi t0, t0, 1
-    j while
-        
+addi a0, a0 4 #a0 + 4 para aumentar una posicion en memoria
+addi t0, t0, 1 #iterador + 1
+
+beq t0, a1, return #si iterado == length -> anda a return
+
+lw t2, 0(a0) #asigno el valor a t2
+blt t1, t2, CambiaMax #si max < t2 -> cambiamax
+j while
+
+
 return:
-    mv a0, t1
-    ret
+mv a0, t1 #copio en a0 max para que devuelva eso
+ret  #jump a ra, que era la 4 linea masomenos
+
+CambiaMax:
+mv t1, t2 #max = length en la posicion
+j while
 
 
 ejercicio 2:
@@ -101,51 +106,47 @@ def copia_par_array(q, s, length)
     return s
 
 assembler:
-.text:
+.data
+arrayQ: .word 1 2 3 4 5  6
+arrayS: .word 1 1 1 1 1 1 
+length: .word 6
+
+.text
 la a0, arrayS
 la a1, arrayQ
 lw a2, length
-jal ra, copia_par_array
+jal ra, CopiaPares
 
-li a7ddi sp, sp, -12, 4 #printea
+li a7, 4 #printea
 ecall
 
 li a7, 93 #stopea
 ecall
 
-
-copia_par_array:
-li t0, 0 #i = 0
+CopiaPares:
+li t0, 0 #iterador
 
 
 while:
-bge t0, a2, return
-lw t1, 0(a1)
+beq t0, a2, return
+addi t0, t0, 1 #sumo uno al iteraador
+lw t1, 0(a1) #t1 es igual al elemento en la direcccion a0
+andi t2, t1, 1 #me quedo con el bit menos significativo de t1
 
-            
-andi t2, t1, 1 #hago mascara a t1 (q[i]) para saber si es par
-                
-beq t2, x0, reemplazo # si es par lo pongo en s  
-addi t0, t0, 1
-addi a1, a1, 4
+beq t2, x0, reescribo #si t1 == 0 -> reescribo (por que en ese caso es par)
 addi a0, a0, 4
+addi a1, a1, 4 # aumento una palabra (una posicion) en el arreglo (paso a siguiente elem)
 j while
 
-reemplazo: 
-sw t1, 0(a0)
-addi t0, t0, 1
-addi a1, a1, 4
+
+reescribo:
+sw t1, 0(a0) #guardo t1 en la posicion a0(arrayS)
 addi a0, a0, 4
+addi a1, a1, 4 # aumento una palabra (una posicion) en el arreglo (paso a siguiente elem)
 j while
-    
+
 return:
-    mv a0, t1
-    ret
-
-.data: 
-arrayS: .word 0x00000003 0x00000001 0x00000004 0x00000005 
-arrayQ: .word 0x00000004 0x00000002 0x00000001 0x00000001 
-length: .word 0x00000004
+ret
 
 ejercicio 4:
 
@@ -167,10 +168,17 @@ def binary_search (array, elem, length)
 
 assembler:
 
-.text:
+.data
+.data: 
+array: .word 1 3 5 7 9 11 13 15 17 19
+target: .word 17
+length: .word 10
+
+.text
 la a0, array
-lw a1, target
-jal ra, binary_search
+lw a1, length
+lw a2, target
+jal ra, BinarySearch
 
 li a7, 4 #printea
 ecall
@@ -178,46 +186,39 @@ ecall
 li a7, 93 #stopea
 ecall
 
-binary_search:
-li t0, 0 #abajo
-lw t1, length 
-addi t1, t1, -1 #arriba = length - 1
+BinarySearch:
+li t0, 0 #abajo = 0
+addi t1, a1, -1 #arriba = length -1
 
 while:
-mv t2, t0 #t2 = abajo
-mv t5, t1 # t5 = arriba
-sub t6, t5, t0 #t5 = arriba - abajo
-srli t5, t6, 1 #t5 = (arriba - abajo)/2  toma floor
-add t2, t0, t5 #medio(t2) = abajo + (arriba - abajo)/2 
-                
+ble t1, t0, return #si abajo <= arriba -> return
 
-slli t3, t2, 2 # t3 = medio*4
-add a0, a0, t3 # a0 = a0 + t3
+mv t2, t0 #medio = abajo
+sub t3, t1, t0 #t3 = arriba - abajo
+srli t3, t3, 1 # t3= t3/2
+add t2, t2, t3 # medio = abajo + (arriba - abajo)/2
 
-lw t4, 0(a0)  # t4 = array[medio]
-beq t4, a1, return  # t4 = a1 -> return
+mv t3, a0 #me guardo a0 
+slli t4, t2, 2 #t4 = medio*4
+add a0, a0, t4 # a0 = a0 + medio*4
+lw t4, 0(a0) # t4 = array[medio]
+mv a0, t3
 
-blt t4, a1, caso  # t4 < a1 -> medio_es_abajo
- 
-sub a0, a0, t3 # a0 = a0 - t3
-addi t1, t2, -1 # arriba = medio - 1
+beq t4, a2, return #si array[medio] = target -> return
+
+blt t4, a2, abajo_medio #si array[medio] < target -> abajo_medio
+
+mv t1, t2
 j while
 
-caso:
-sub a0, a0, t3 # a0 = a0 - t3
-addi t0, t2, 1 #abajo = medio + 1
+abajo_medio:
+mv t0, t2
 j while
-    
+
 return:
-    mv a0, t2 #devuelvo medio (t2)
-    ret
-
-.data: 
-array: .word 1 3 5 7 9 11 13 15 17 19
-target: .word 15
-length: .word 10
-
-
+mv a0, t2
+ret
+    
 ejercicio 5:
 
 def fibonacci(n):
@@ -231,60 +232,58 @@ def fibonacci(n):
         return fibonacci(a) + fibonacci(b)
 
 assembler:
-.text:
-lw a0, numero
-jal ra, fibonacci
 
-li a7, 1 #printea
+.data
+number: .word 2
+
+.text
+lw a1, number
+jal ra, Fibonacci
+
+li a7, 4 #printea
 ecall
 
 li a7, 93 #stopea
 ecall
 
-fibonacci:
+Fibonacci:
 addi sp, sp, -12 #hago 3 espacios en el stack, empieza desde arriba por eso resto
 sw ra , 0(sp)
-sw a0,  4(sp)
+sw a1, 4(sp)
 
 addi t0 , zero , 1
-beq t0, a0, then1
-beq x0, a0, then2
-#else
-addi a0, a0, -1
-jal ra, fibonacci
-sw a0, 8(sp) #guardo el resultado de fibonacci(n-1)
+beq t0, a1, then1
+beq x0, a1, then2
 
+addi a1, a1, -1
 
-lw a0, 4(sp) #restauro a0 = n
-addi a0, a0, -2
-jal ra, fibonacci
-sw a0, 4(sp) #guardo el resultado de fibonacci(n-2) 
+jal ra, Fibonacci #Fibonacci(n-1)
+sw a0, 8(sp)
 
-lw t1, 4(sp) 
+lw a1, 4(sp)
+addi a1, a1, -2
+jal ra, Fibonacci #Fibonacci(n-2)
+sw a0, 4(sp)
+
+lw ra, 0(sp) #vuelvo al ra original
+# a a0 tengo que cargarle la suma de 4(sp) y 8(sp)
+li a0, 0
+lw t1, 4(sp)
 lw t2, 8(sp)
-lw ra, 0(sp)
-add t1, t1, t2
+add a0, t1, t2 #a0 es resfib(n-1) + resfib(n-2)
 
-
-add a0 , t1 , x0
-
-return:
-addi sp , sp , 12
+addi sp, sp, 12
 ret
 
-
 then1:
-    lw ra, 0(sp)
-addi sp , sp , 12
+addi sp, sp, 12
+li a0, 1
 ret
     
 then2:
-    lw ra, 0(sp)
-addi sp , sp , 12
+addi sp, sp, 12
+mv a0, x0
 ret
-
-.data: 
-numero: .word 5
 
 ejercicio 6:
 a-
