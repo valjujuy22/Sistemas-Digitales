@@ -608,6 +608,39 @@ return2:
 li a0, 1
 ret
 
+ejercicio 1 parcial ramdom:
+.data
+array: .word 0xffff , 0x1111 , 0xfff0, 0x8888, 0x0003, 0x0001, 0x0000, 0x8088, 0x0202, 0x8081, 0x2222, 0x5555
+#con los words no se dan vuelta, solo con los bytes
+.text
+la a0, array
+li a1, 12
+li t2, 0 #deberia ser un a pero bueno un t
+jal ra, acumulador
 
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+acumulador:
+beq a1, x0, return
+lw t3, 0(a0)       #Cargar el siguiente elemento del arreglo en t3
+addi a0, a0, 4     #Mover el puntero del arreglo a la siguiente posición
+addi a1, a1, -1    #Decrementar el contador de elementos
+
+slli t3, t3, 16    #Desplazar a la izquierda 16 bits para colocar los 16 bits de interés en la parte alta
+srai t3, t3, 16    #Desplazar aritméticamente a la derecha 16 bits para extender el signo
+#srai propaga el bit mas significativo (podria haber usado lh que tambien lo hace y son menos operaciones)
+#para extender un valor de 16 bit a 32 bits manteniendo complemento a 2 me alcanza con extender el bit mas significativo
+
+add t2, t2, t3     #Sumar el valor extendido al acumulador
+
+j acumulador             #Repetir el bucle
+
+return:
+mv a0, t2
+ret
 
 
