@@ -302,56 +302,56 @@ def factorial(n)
     else
         return mul(n, facttorial(n-1))
     
-.text:
-lw a0, numero
+.data
+number: .word 6
+
+.text
+lw a1, number
 jal ra, factorial
 
-li a7, 1 #printea
+li a7, 4 #printea
 ecall
 
 li a7, 93 #stopea
 ecall
 
-mul:
-li t0, 0
-li t3, 0 #acumulador
-j whileW
-
-whileW:
-addi t0, t0, 1 #t0 += 1
-add t3, t3, a0  
-
-blt t0, t2, whileW #si t0 != t2 -> whileW 
-
-mv a0, t3
-ret
-
 factorial:
-addi sp, sp, -8
-li t1, 1
-sw ra, 0(sp)
-sw a0, 4(sp)
+addi sp, sp, -8 #hago dos espacios
+sw ra, 0(sp) # guardo el ra
+sw a1, 4(sp) #guardo el n
+addi a1, a1, -1 #le resto 1 a n
 
-bgt a0, t1, while # a0 > t1 -> while
+beq a1, x0, return #si n == 0 -> return
 
-#addi a0, a0, 1
+
+jal ra, factorial
+lw a1, 4(sp) #recupero a1
+
+jal ra, multiplicacion #a0 = a0 * a1
+lw ra, 0(sp) # recupero ra
+addi sp, sp, 8 
+
+ret #devuelve a0
+
+
+return:
+li a0, 1
 ret
 
+multiplicacion:
+mv t0, a1 
 
 while:
 addi a0, a0, -1
-jal ra, factorial
-mv t2, a0
-lw t4, 0(sp) #quiero el ra anterior no el del factorial
-lw a0, 4(sp) 
-addi sp, sp, 8
+beq a0, x0, return2
+add t0, t0, a1
+    
+j while
 
-jal ra, mul #multiplico a0 = t2 * a0
-mv ra, t4
-jr ra
+return2:
+mv a0, t0    
+ret
 
-.data
-numero: .word 7
 
 c) el problema es que para
 
@@ -472,6 +472,46 @@ mascara2: .byte 0x00 0xff 0x00 0x00
 mascara3: .byte 0x00 0x00 0xff 0x00
 mascara4: .byte 0x00 0x00 0x00 0xff 
 
+version 2;;;
+.data
+s0: .byte 0x11 0x01 0x10 0x11
+
+.text
+lw a0, s0 # a0 = 0x11f0a237
+jal ra, pares
+
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+pares:
+li t2, 1 #registro con valor 1
+li t3, 4 #iterador (sirve para parar el while)
+li t4, 0 #contador
+andi t1, a0, 1 #si 0x00000037 termina en 1 ->  0x11f0a237 termina en 1 entonces si hago and 1 me da lo mismo
+beq t1, t2, sumo #si t1 == 1 -> sumo
+
+while:
+addi t3, t3, -1 #resto 1 a iterador
+beq t3, x0, return #si t3 == 0 -> termino
+srli a0, a0, 8 #por que para mover un lugar en binario es 1 entonces para mover un lugar en hexa es 4
+#en la primera iteracion si tenia 0x11f0a237 paso a tener 0x0011f0a2
+andi t1, a0, 1 #aplico la misma prop
+
+beq t1, t2, sumo ##si t1 == 1 -> sumo
+
+j while
+
+sumo:
+addi t4, t4, 1 #t4 + 1
+j while
+
+return:
+mv a0, t4 
+ret
+
 
 ejercicio 3:
 .text:
@@ -516,6 +556,57 @@ ret
 .data
 mediciones: .half 0x1100 0x00F0 0x0200 0x0010 0x1100
 largo: .byte 5
+
+version 2::::
+.data
+array: .half 0x0100 0x00F0 0xA200 0x1000
+length: .byte 4
+
+.text
+la a0, array
+lw a1, length
+li s0, 0x0F00
+jal ra, mediciones
+
+li a7, 1 #printea
+ecall
+
+li a7, 93 #stopea
+ecall
+
+mediciones:
+li t0, 0x0000ffff #me sirve para hacer and a las half words
+li t1, 0 #iterador (sirve para terminar el while)
+li t3, 0 #contador
+
+
+while:
+beq t1, a1, return1 #si iterador == largo -> return
+addi t1, t1, 1 #sumo a iterador
+lh t2, 0(a0) #lh por que quiero toma solo half word
+addi a0, a0, 2 #aumento de a 2 ya que quiero halfword
+
+and t2, t2, t0 #elimino la mitad superior de la palabra ya que puede ser no deseada (lh completa segun signo)
+#andi t2, t2, 0x0000ffff no se puede por que supera los 12 bits que tiene un imm
+
+blt s0, t2, sumo #si 0x0f00 < t2 -> sumo
+
+j while
+
+sumo:
+addi t3, t3, 1
+j while
+
+return1:
+mv t1, a1
+li a0, 0
+srli t1, t1, 1 #divido por dos el largo y lo meto en t1
+blt t1, t3, return2 #si largo/2 < contador -> return 2
+ret #devuelve a0 = 0
+
+return2:
+li a0, 1
+ret
 
 
 
